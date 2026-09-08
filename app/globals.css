@@ -309,7 +309,8 @@ nav.links a:hover{color:var(--accent-strong);}
 .compare-table{width:100%; min-width:640px; border-collapse:collapse; font-size:14.5px;}
 .compare-table th, .compare-table td{padding:13px 14px; text-align:center; border-bottom:1px solid var(--border);}
 .compare-table th{font-family:"Outfit",sans-serif; font-size:12px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); font-weight:700;}
-.compare-table td:first-child, .compare-table th:first-child{text-align:left; font-weight:600;}
+.compare-table td:first-child{text-align:left; font-weight:600;}
+.compare-table thead th:first-child{text-align:center; font-weight:600;}
 .compare-table th.brand{color:var(--accent-strong); font-size:14px; text-transform:none; letter-spacing:0; text-align:center;}
 .compare-table thead th:not(:first-child){text-align:center; vertical-align:middle;}
 .compare-table th.brand, .compare-table td:nth-child(2){background:var(--accent-soft);}

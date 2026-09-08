@@ -4,7 +4,7 @@
 
 create extension if not exists "pgcrypto";
 
-create table if not exists public.leads (
+create table if not exists public.badminton_leads (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
 
@@ -27,9 +27,9 @@ create table if not exists public.leads (
   page_url text          -- 送出當下的頁面網址，方便追蹤來源
 );
 
-comment on table public.leads is '免費開店評估表單送出的名單';
+comment on table public.badminton_leads is '免費開店評估表單送出的名單';
 
-alter table public.leads enable row level security;
+alter table public.badminton_leads enable row level security;
 -- 目前沒有任何 policy：anon / authenticated 角色完全無法讀寫這張表，
 -- 只有 service-role key（伺服器端）可以存取。之後做後台名單頁時，
 -- 會另外新增 admin_users 表 + 對應的 policy 讓已登入管理員可以讀取。

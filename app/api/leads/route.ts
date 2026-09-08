@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { error } = await supabase.from("leads").insert({
+  const { error } = await supabase.from("badminton_leads").insert({
     status: body.status ?? null,
     region: body.region ?? null,
     budget: body.budget ?? null,

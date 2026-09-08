@@ -12,13 +12,13 @@ app/
   page.tsx            首頁 — 讀取 content/body.html 原樣輸出
   globals.css         整站樣式（從原本的行銷頁面搬過來，未經改動）
   SiteScripts.tsx      把 content/site.js 以真正的 <script> 標籤注入頁面
-  api/leads/route.ts   表單送出 API：驗證必填欄位後寫入 Supabase leads 表
+  api/leads/route.ts   表單送出 API：驗證必填欄位後寫入 Supabase badminton_leads 表
 content/
   body.html            首頁全部內容（header + main + footer 的原始 HTML）
   site.js              滾動動畫、數字動畫、FAQ 手風琴、門禁 demo、
                         計算機、表單送出等前端互動邏輯
 lib/supabase/admin.ts  Service-role Supabase client（僅限伺服器端使用）
-supabase/migrations/   資料庫 schema（目前只有 leads 表）
+supabase/migrations/   資料庫 schema（目前只有 badminton_leads 表）
 ```
 
 `content/body.html`、`content/site.js`、`app/globals.css` 是直接從原本驗收過的
@@ -38,13 +38,14 @@ npm run dev
 ## Supabase 設定
 
 1. 到 [Supabase Dashboard](https://supabase.com/dashboard) 建立新專案（或使用現有專案）。
-2. 進到專案的 **SQL Editor**，貼上 `supabase/migrations/0001_leads.sql` 整份內容並執行。
+2. 進到專案的 **SQL Editor**，貼上 `supabase/migrations/0001_badminton_leads.sql` 整份內容並執行。
+   （這個專案可以跟其他事業共用同一個 Supabase 專案，`badminton_leads` 這個表名已經加了前綴，不會跟其他表衝突。）
 3. 到專案 **Settings → API**，複製三個值填進 `.env.local`：
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`（⚠️ 絕對不能外流，只用在伺服器端 API route）
 
-`leads` 表沒有開放任何 public 的 RLS policy，前端不會直接連 Supabase，
+`badminton_leads` 表沒有開放任何 public 的 RLS policy，前端不會直接連 Supabase，
 只有 `/api/leads` 用 service-role key 寫入，安全性上比較單純。
 
 ## 部署（Vercel）
