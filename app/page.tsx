@@ -2,8 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import SiteScripts from "./SiteScripts";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getDefaultContentMap } from "@/lib/site-content";
 
-// FAQ 內容改成從 Supabase 讀取，每 60 秒重新驗證一次（ISR），
+// FAQ／文案內容改成從 Supabase 讀取，每 60 秒重新驗證一次（ISR），
 // 後台編輯後最慢約 1 分鐘會反映到正式網站。
 export const revalidate = 60;
 
@@ -109,6 +110,31 @@ async function getFaqs(): Promise<FaqItem[]> {
   }
 }
 
+async function getSiteContent(): Promise<Record<string, string>> {
+  const map = getDefaultContentMap();
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("badminton_site_content")
+      .select("key, value");
+    if (!error && data) {
+      for (const row of data as { key: string; value: string }[]) {
+        map[row.key] = row.value;
+      }
+    }
+  } catch {
+    // 讀取失敗就用預設值，不影響網站上線
+  }
+  return map;
+}
+
+function applyContentMarkers(html: string, content: Record<string, string>): string {
+  return html.replace(/<!--CONTENT:([a-zA-Z0-9_]+)-->/g, (_match, key: string) => {
+    const value = content[key];
+    return value !== undefined ? escapeHtml(value) : "";
+  });
+}
+
 export default async function Page() {
   const bodyHtmlRaw = fs.readFileSync(
     path.join(process.cwd(), "content", "body.html"),
@@ -119,11 +145,10 @@ export default async function Page() {
     "utf8"
   );
 
-  const faqs = await getFaqs();
-  const bodyHtml = bodyHtmlRaw.replace(
-    "<!--FAQ_ITEMS-->",
-    renderFaqItemsHtml(faqs)
-  );
+  const [faqs, content] = await Promise.all([getFaqs(), getSiteContent()]);
+
+  let bodyHtml = bodyHtmlRaw.replace("<!--FAQ_ITEMS-->", renderFaqItemsHtml(faqs));
+  bodyHtml = applyContentMarkers(bodyHtml, content);
 
   return (
     <>
