@@ -2,9 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import SiteScripts from "./SiteScripts";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getDefaultContentMap } from "@/lib/site-content";
+import { getDefaultContentMap, derivePhoneTelHref } from "@/lib/site-content";
+import { PHOTO_SLOTS, PHOTO_BUCKET } from "@/lib/photo-slots";
 
-// FAQ／文案內容改成從 Supabase 讀取，每 60 秒重新驗證一次（ISR），
+// FAQ／文案內容／照片改成從 Supabase 讀取，每 60 秒重新驗證一次（ISR），
 // 後台編輯後最慢約 1 分鐘會反映到正式網站。
 export const revalidate = 60;
 
@@ -125,6 +126,9 @@ async function getSiteContent(): Promise<Record<string, string>> {
   } catch {
     // 讀取失敗就用預設值，不影響網站上線
   }
+  // tel: 連結用的純數字電話號碼，是從 contact_phone 自動算出來的，
+  // 不是後台可以直接編輯的欄位。
+  map["contact_phone_tel"] = derivePhoneTelHref(map);
   return map;
 }
 
@@ -132,6 +136,39 @@ function applyContentMarkers(html: string, content: Record<string, string>): str
   return html.replace(/<!--CONTENT:([a-zA-Z0-9_]+)-->/g, (_match, key: string) => {
     const value = content[key];
     return value !== undefined ? escapeHtml(value) : "";
+  });
+}
+
+async function getPhotoUrls(): Promise<Record<string, string>> {
+  const urls: Record<string, string> = {};
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("badminton_photos")
+      .select("slot_key, storage_path, updated_at");
+    if (!error && data) {
+      for (const row of data as { slot_key: string; storage_path: string; updated_at: string }[]) {
+        const { data: pub } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(row.storage_path);
+        const version = encodeURIComponent(row.updated_at ?? "");
+        urls[row.slot_key] = `${pub.publicUrl}?v=${version}`;
+      }
+    }
+  } catch {
+    // 讀取失敗就維持原本佔位畫面，不影響網站上線
+  }
+  return urls;
+}
+
+function applyPhotoMarkers(html: string, photoUrls: Record<string, string>): string {
+  return html.replace(/<!--PHOTO:([a-zA-Z0-9_]+)-->/g, (_match, key: string) => {
+    const slot = PHOTO_SLOTS.find((s) => s.key === key);
+    const url = photoUrls[key];
+    if (url) {
+      return `<img src="${escapeHtml(url)}" alt="${
+        slot ? escapeHtml(slot.label) : ""
+      }" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" />`;
+    }
+    return slot ? slot.placeholderHtml : "";
   });
 }
 
@@ -145,10 +182,15 @@ export default async function Page() {
     "utf8"
   );
 
-  const [faqs, content] = await Promise.all([getFaqs(), getSiteContent()]);
+  const [faqs, content, photoUrls] = await Promise.all([
+    getFaqs(),
+    getSiteContent(),
+    getPhotoUrls(),
+  ]);
 
   let bodyHtml = bodyHtmlRaw.replace("<!--FAQ_ITEMS-->", renderFaqItemsHtml(faqs));
   bodyHtml = applyContentMarkers(bodyHtml, content);
+  bodyHtml = applyPhotoMarkers(bodyHtml, photoUrls);
 
   return (
     <>

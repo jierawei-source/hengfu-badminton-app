@@ -7,6 +7,7 @@ type Field = {
   label: string;
   defaultValue: string;
   multiline?: boolean;
+  group: string;
   currentValue: string;
 };
 
@@ -31,7 +32,22 @@ const buttonStyle: CSSProperties = {
   cursor: "pointer",
 };
 
+function groupFields(fields: Field[]): { group: string; fields: Field[] }[] {
+  const order: string[] = [];
+  const map = new Map<string, Field[]>();
+  for (const field of fields) {
+    if (!map.has(field.group)) {
+      map.set(field.group, []);
+      order.push(field.group);
+    }
+    map.get(field.group)!.push(field);
+  }
+  return order.map((group) => ({ group, fields: map.get(group)! }));
+}
+
 export default function ContentManager({ fields }: { fields: Field[] }) {
+  const groups = groupFields(fields);
+
   return (
     <div>
       <h1 style={{ fontSize: "22px", fontWeight: 800, marginBottom: "8px" }}>
@@ -41,9 +57,25 @@ export default function ContentManager({ fields }: { fields: Field[] }) {
         編輯後大約 1 分鐘內會反映到正式網站。留空會顯示預設文字，不會讓網站開天窗。
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {fields.map((field) => (
-          <ContentRow key={field.key} field={field} />
+      <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+        {groups.map(({ group, fields: groupFieldsList }) => (
+          <div key={group}>
+            <h2
+              style={{
+                fontSize: "15px",
+                fontWeight: 800,
+                marginBottom: "12px",
+                color: "#333",
+              }}
+            >
+              {group}
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {groupFieldsList.map((field) => (
+                <ContentRow key={field.key} field={field} />
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </div>
