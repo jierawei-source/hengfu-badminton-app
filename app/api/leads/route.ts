@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendLeadNotificationEmail } from "@/lib/email/sendLeadNotification";
 
 export const runtime = "nodejs";
 
@@ -69,6 +70,25 @@ export async function POST(req: NextRequest) {
     console.error("leads insert failed", error);
     return NextResponse.json({ error: "資料庫寫入失敗" }, { status: 500 });
   }
+
+  // Email 通知：等它做完再回應（不用 void 背景執行）。
+  // 在 Vercel 這類雲端函式環境，回應送出後還沒做完的背景工作有機率被提前終止，
+  // 導致信有時候寄得出、有時候寄不出。sendLeadNotificationEmail 內部已經把所有錯誤
+  // 都攔截住、絕不會 throw，所以這裡 await 不會讓「寄信失敗」變成「表單送出失敗」，
+  // 只是換取「一定會真的寄」。
+  await sendLeadNotificationEmail({
+    name: body.name.trim(),
+    phone: body.phone.trim(),
+    lineId: body.lineId,
+    email: body.email,
+    status: body.status,
+    region: body.region,
+    budget: body.budget,
+    area: body.area,
+    timeline: body.timeline,
+    courtType: body.courtType,
+    concern: body.concern,
+  });
 
   return NextResponse.json({ ok: true });
 }
