@@ -181,4 +181,26 @@ if(assessForm){
   calc();
 })();
 
+// case carousel (真實案例：一次看4張，卡片多的話左右滑動／按箭頭)
+document.querySelectorAll('.case-carousel').forEach(function(car){
+  var grid = car.querySelector('.case-grid');
+  var prev = car.querySelector('.case-nav.prev');
+  var next = car.querySelector('.case-nav.next');
+  if(!grid || !prev || !next) return;
+
+  function update(){
+    var max = grid.scrollWidth - grid.clientWidth - 1;
+    var hasOverflow = grid.scrollWidth > grid.clientWidth + 1;
+    car.classList.toggle('no-scroll', !hasOverflow);
+    prev.disabled = grid.scrollLeft <= 1;
+    next.disabled = grid.scrollLeft >= max;
+  }
+
+  prev.addEventListener('click', function(){ grid.scrollBy({ left: -grid.clientWidth, behavior: 'smooth' }); });
+  next.addEventListener('click', function(){ grid.scrollBy({ left: grid.clientWidth, behavior: 'smooth' }); });
+  grid.addEventListener('scroll', update);
+  window.addEventListener('resize', update);
+  update();
+});
+
 // theme respects host; no manual toggle needed

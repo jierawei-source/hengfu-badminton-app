@@ -442,17 +442,31 @@ nav.links a:hover{color:var(--accent-strong);}
 .calc-note{font-size:12.5px; color:var(--ink-faint); margin-top:4px;}
 
 /* ============ case ============ */
-.case-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:18px;}
-@media (max-width:920px){ .case-grid{grid-template-columns:1fr 1fr;} }
-@media (max-width:560px){ .case-grid{grid-template-columns:1fr;} }
-.case-card{overflow:hidden; padding:0;}
+.case-carousel{position:relative;}
+.case-grid{
+  display:flex; gap:18px; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch; padding-bottom:6px; scrollbar-width:thin;
+}
+.case-grid::-webkit-scrollbar{height:6px;}
+.case-grid::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
+.case-card{flex:0 0 calc((100% - 54px)/4); scroll-snap-align:start; min-width:0; overflow:hidden; padding:0;}
+@media (max-width:920px){ .case-card{flex:0 0 calc((100% - 18px)/2);} }
+@media (max-width:560px){ .case-card{flex:0 0 82%;} }
 .case-banner{height:104px; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--accent),var(--accent-strong)); color:#fff;}
 .case-banner.lime{background:linear-gradient(135deg,var(--lime),var(--lime-strong));}
 .case-body{padding:16px 18px 20px;}
 .case-body h3{font-size:15.5px; margin-bottom:6px;}
 .case-loc{font-size:12.5px; color:var(--ink-soft); display:flex; align-items:center; gap:5px;}
-.partner-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;}
-.partner-chip{padding:8px 16px; border-radius:999px; background:var(--surface); border:1px solid var(--border); font-size:13px; font-weight:600; color:var(--ink-soft);}
+.case-nav{
+  position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%;
+  border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow);
+  display:flex; align-items:center; justify-content:center; color:var(--ink); cursor:pointer; z-index:2;
+}
+.case-nav.prev{left:-20px;}
+.case-nav.next{right:-20px;}
+.case-nav:disabled{opacity:0.35; cursor:default;}
+.case-carousel.no-scroll .case-nav{display:none;}
+@media (max-width:820px){ .case-nav{display:none;} }
 .case-stats-band{
   margin-top:34px; padding:34px 20px; border-radius:22px;
   background:linear-gradient(135deg,var(--accent-soft),var(--lime-soft));
