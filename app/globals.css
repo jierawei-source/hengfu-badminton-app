@@ -226,6 +226,8 @@ nav.links a:hover{color:var(--accent-strong);}
 .hero-photo-frame svg{color:var(--accent); opacity:0.8;}
 .hero-photo-frame b{font-size:14.5px; color:var(--ink-soft); font-weight:700;}
 .hero-photo-frame span{font-size:12.5px;}
+.hero-photo-frame:has(img){padding:0; border:none; background:none;}
+.hero-photo-frame img{width:100%; height:100%; object-fit:cover; border-radius:inherit; display:block;}
 @media (max-width:920px){ .hero-photo-frame{aspect-ratio:16/9;} }
 
 /* ============ advantage grid ============ */
@@ -273,6 +275,8 @@ nav.links a:hover{color:var(--accent-strong);}
 .plan-photo-frame svg{color:var(--accent); opacity:0.8;}
 .plan-photo-frame b{font-size:13.5px; color:var(--ink-soft); font-weight:700;}
 .plan-photo-frame span{font-size:12px;}
+.plan-photo-frame:has(img){padding:0; border:none; background:none;}
+.plan-photo-frame img{width:100%; height:100%; object-fit:cover; border-radius:inherit; display:block;}
 .plan-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
 .plan-name{font-size:20px; font-weight:900;}
 .plan-desc{color:var(--ink-soft); font-size:14px; margin-top:6px;}
