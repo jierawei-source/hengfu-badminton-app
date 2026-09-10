@@ -73,6 +73,24 @@ const DEFAULT_FAQS: FaqItem[] = [
   },
 ];
 
+type CaseItem = {
+  id: string;
+  name: string;
+  location: string;
+  photoUrl: string | null;
+};
+
+// 資料庫沒有資料或讀取失敗時使用的預設案例，維持跟現在網站一樣的內容，確保不會開天窗。
+const DEFAULT_CASES: { name: string; location: string }[] = [
+  { name: "南區羽球館", location: "高雄" },
+  { name: "羽神同行羽球館", location: "台中市神岡區" },
+  { name: "鹿角俱樂部", location: "台南市永康區" },
+  { name: "Pika Pika 匹克球館", location: "彰化縣花壇鄉" },
+];
+
+// 案例還沒上傳照片時顯示的預留圖示。
+const CASE_PLACEHOLDER_ICON = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="#fff" stroke-width="1.8"/><path d="M8 8h2M8 12h2M8 16h2M14 8h2M14 12h2M14 16h2" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
@@ -92,6 +110,22 @@ function renderFaqItemsHtml(faqs: FaqItem[]): string {
           f.answer
         )}</p></div></div>`
     )
+    .join("");
+}
+
+function renderCaseItemsHtml(cases: CaseItem[]): string {
+  return cases
+    .map((c, i) => {
+      const bannerInner = c.photoUrl
+        ? `<img src="${escapeHtml(c.photoUrl)}" alt="${escapeHtml(
+            c.name
+          )}" style="width:100%;height:100%;object-fit:cover;" />`
+        : CASE_PLACEHOLDER_ICON;
+      const bannerClass = !c.photoUrl && i % 3 === 2 ? "case-banner lime" : "case-banner";
+      return `<div class="card case-card reveal"><div class="${bannerClass}">${bannerInner}</div><div class="case-body"><h3>${escapeHtml(
+        c.name
+      )}</h3><span class="case-loc">📍 ${escapeHtml(c.location)}</span></div></div>`;
+    })
     .join("");
 }
 
@@ -172,6 +206,47 @@ function applyPhotoMarkers(html: string, photoUrls: Record<string, string>): str
   });
 }
 
+async function getCases(): Promise<CaseItem[]> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from("badminton_cases")
+      .select("id, name, location, storage_path, updated_at")
+      .order("sort_order", { ascending: true });
+    if (error || !data || data.length === 0) {
+      return DEFAULT_CASES.map((c, i) => ({
+        id: `default-${i}`,
+        name: c.name,
+        location: c.location,
+        photoUrl: null,
+      }));
+    }
+    return (
+      data as {
+        id: string;
+        name: string;
+        location: string;
+        storage_path: string | null;
+        updated_at: string;
+      }[]
+    ).map((row) => {
+      let photoUrl: string | null = null;
+      if (row.storage_path) {
+        const { data: pub } = supabase.storage.from(PHOTO_BUCKET).getPublicUrl(row.storage_path);
+        photoUrl = `${pub.publicUrl}?v=${encodeURIComponent(row.updated_at ?? "")}`;
+      }
+      return { id: row.id, name: row.name, location: row.location, photoUrl };
+    });
+  } catch {
+    return DEFAULT_CASES.map((c, i) => ({
+      id: `default-${i}`,
+      name: c.name,
+      location: c.location,
+      photoUrl: null,
+    }));
+  }
+}
+
 export default async function Page() {
   const bodyHtmlRaw = fs.readFileSync(
     path.join(process.cwd(), "content", "body.html"),
@@ -182,13 +257,15 @@ export default async function Page() {
     "utf8"
   );
 
-  const [faqs, content, photoUrls] = await Promise.all([
+  const [faqs, content, photoUrls, cases] = await Promise.all([
     getFaqs(),
     getSiteContent(),
     getPhotoUrls(),
+    getCases(),
   ]);
 
   let bodyHtml = bodyHtmlRaw.replace("<!--FAQ_ITEMS-->", renderFaqItemsHtml(faqs));
+  bodyHtml = bodyHtml.replace("<!--CASE_ITEMS-->", renderCaseItemsHtml(cases));
   bodyHtml = applyContentMarkers(bodyHtml, content);
   bodyHtml = applyPhotoMarkers(bodyHtml, photoUrls);
 

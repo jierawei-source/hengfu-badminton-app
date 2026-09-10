@@ -42,6 +42,7 @@ export default async function AdminProtectedLayout({
         <AdminNavLink href="/admin/faq">常見問題</AdminNavLink>
         <AdminNavLink href="/admin/content">方案／文案內容</AdminNavLink>
         <AdminNavLink href="/admin/photos">照片管理</AdminNavLink>
+        <AdminNavLink href="/admin/cases">真實案例</AdminNavLink>
         <form
           action="/api/admin/logout"
           method="post"
