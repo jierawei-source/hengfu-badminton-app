@@ -230,6 +230,20 @@ nav.links a:hover{color:var(--accent-strong);}
 .hero-photo-frame img{width:100%; height:100%; object-fit:cover; border-radius:inherit; display:block;}
 @media (max-width:920px){ .hero-photo-frame{aspect-ratio:16/9;} }
 
+.golf-photo-slot{width:100%; margin-bottom:28px;}
+.golf-photo-frame{
+  aspect-ratio:21/9; border-radius:20px; border:2px dashed var(--border);
+  background:var(--surface-alt); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  color:var(--ink-faint); text-align:center; padding:24px;
+}
+.golf-photo-frame svg{color:var(--accent); opacity:0.8;}
+.golf-photo-frame b{font-size:14.5px; color:var(--ink-soft); font-weight:700;}
+.golf-photo-frame span{font-size:12.5px;}
+.golf-photo-frame:has(img){padding:0; border:none; background:none;}
+.golf-photo-frame img{width:100%; height:100%; object-fit:cover; border-radius:inherit; display:block;}
+@media (max-width:920px){ .golf-photo-frame{aspect-ratio:16/9;} }
+@media (max-width:560px){ .golf-photo-frame{aspect-ratio:4/3;} }
+
 /* ============ advantage grid ============ */
 .grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:20px;}
 @media (max-width:920px){ .grid-4{grid-template-columns:1fr 1fr;} }
